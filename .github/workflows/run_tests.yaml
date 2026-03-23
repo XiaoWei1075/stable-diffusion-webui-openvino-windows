@@ -9,6 +9,8 @@ jobs:
     name: tests on CPU with empty model
     runs-on: ubuntu-latest
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name != github.event.pull_request.base.repo.full_name
+    env:
+      GIT_TERMINAL_PROMPT: "0"
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
@@ -20,6 +22,9 @@ jobs:
           cache-dependency-path: |
             **/requirements*txt
             launch.py
+      - name: Configure Git
+        run: |
+          git config --global url."https://${{ secrets.GITHUB_TOKEN }}@github.com/".insteadOf "https://github.com/"
       - name: Install test dependencies
         run: |
           pip install "setuptools<81" wheel
