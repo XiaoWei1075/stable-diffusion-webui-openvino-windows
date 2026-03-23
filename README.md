@@ -1,6 +1,39 @@
 # Stable Diffusion web UI with OpenVINO™ Acceleration
 A browser interface based on Gradio library for Stable Diffusion with OpenVINO™ Acceleration Script.
 
+## Custom Fixes & Modifications (Fork Details)
+This fork is tuned for a smoother Windows OpenVINO experience, with practical fixes for stability, LoRA loading, and day-to-day usability.
+
+- **Fewer runtime crashes**: better compatibility across `torch`/`diffusers`/OpenVINO edge cases.
+- **LoRA works in real-world layouts**: supports missing-PEFT fallback and LoRA files inside nested folders.
+- **More reliable generation flow**: safer cache behavior, smarter pipeline reuse, and cleaner logs.
+
+### 1. OpenVINO Extension Fixes (`extensions/sd-webui-openvino`)
+- **Fixed Dynamo Backend Error**: Resolved `TypeError: openvino() got an unexpected keyword argument 'options'` by implementing a wrapper for the OpenVINO backend in `scripts/openvino.py`. This ensures compatibility with newer `torch` versions that pass an `options` argument to compile backends.
+- **Log Noise Handling**: Silenced repetitive spam logs (e.g., `standard(not xl) model detected`, `no controlnet detected`, `Recompile...`) in `scripts/openvino.py` to keep the console clean and focuses on critical state changes.
+- **Smart Pipeline Reuse**: Implemented robust pipeline reuse logic in `scripts/openvino.py`. The system now explicitly checks both the Checkpoint name and LoRA configuration (`lora_signature`) before reusing the Diffusers pipeline. This prevents incorrect weight reuse between different models of the same architecture, ensuring that the correct weights are always loaded.
+- **Cache Stability Improvements**:
+  - **Model Cache (XML/BIN)**: Enabled by default to accelerate model loading. Uses absolute paths (`model_cache`) to ensure correct cache resolution and prevent path-related issues on Windows.
+  - **Blob Cache Disabled**: Explicitly disabled OpenVINO blob cache writes to disk (`.blob`) to resolve instability and backend crashes caused by unreliable reuse of blob artifacts across dynamic shape changes (e.g. resolution switching).
+- **Optimized Defaults**:
+  - Pre-configured UI defaults: **Enable OpenVINO** (On), **Device** (GPU), **Cache Mode** (Model Only).
+  - Implemented smart device selection fallback (prefer GPU > NPU > CPU).
+- **Dependency Adjustments**: 
+  - Fixed `pkg_resources` deprecation errors in `install.py`.
+  - Relaxed strict version requirements in `requirements.txt` (e.g., `numpy`, `openvino`) to resolve installation conflicts on Windows environments.
+- **LoRA Compatibility Improvements**:
+  - **PEFT-free fallback path**: keeps `set_adapters()` when PEFT is available, and auto-falls back to sequential `load -> fuse -> unload` when PEFT is missing.
+  - **Subfolder path support**: resolves LoRA files inside nested folders under `models/Lora` (for example `models/Lora/Beauty/chinese-girl.safetensors`).
+  - **Extension-aware file matching**: supports `.safetensors`, `.ckpt`, and `.pt` via direct path checks, A1111 LoRA registry lookup (including aliases), and recursive fallback search.
+  - **Safer fused-cache key**: includes both LoRA name and scale (`name:scale`) to avoid accidental reuse with different weights.
+  - **Failure-state safety**: writes LoRA fused flags only after successful fusion to avoid stale state after errors.
+
+### 2. Performances
+- **Tested maximum image size**: `700x1000` (up to `15.9 GB` shared GPU memory).
+- **Tested GPU inference speed**: average `1.1 s/it` at `512x512` on integrated graphics `Intel(R) Iris(R) Xe Graphics`.
+
+---
+
 This repo is a fork of [AUTOMATIC1111/stable-diffusion-webui](https://github.com/AUTOMATIC1111/stable-diffusion-webui) which includes OpenVINO support through a [custom script](https://github.com/openvinotoolkit/stable-diffusion-webui/blob/master/scripts/openvino_accelerate.py) to run it on Intel CPUs and Intel GPUs.
 
 See wiki page for [Installation-on-Intel-Silicon](https://github.com/openvinotoolkit/stable-diffusion-webui/wiki/Installation-on-Intel-Silicon)

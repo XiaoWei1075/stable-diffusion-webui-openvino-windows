@@ -428,8 +428,6 @@ def openvino_compile_cached_model(cached_model_path, *example_inputs):
         om.inputs[idx].get_node().set_partial_shape(PartialShape(list(input_data.shape)))
     om.validate_nodes_and_infer_types()
 
-    core.set_property({'CACHE_DIR': cache_root_path() + '/blob'})
-
     compiled_model = core.compile_model(om, get_device())
 
     return compiled_model
@@ -482,9 +480,6 @@ def openvino_compile(gm: GraphModule, *args, model_hash_str: str = None, file_na
         om.inputs[idx].get_node().set_element_type(dtype_mapping[input_data.dtype])
         om.inputs[idx].get_node().set_partial_shape(PartialShape(list(input_data.shape)))
     om.validate_nodes_and_infer_types()
-
-    if model_hash_str is not None:
-        core.set_property({'CACHE_DIR': cache_root + '/blob'})
 
     compiled = core.compile_model(om, device)
     return compiled
@@ -1261,6 +1256,10 @@ class Script(scripts.Script):
 
         if enable_caching:
             os.environ["OPENVINO_TORCH_MODEL_CACHING"] = "1"
+            os.environ["OPENVINO_TORCH_CACHE_DIR"] = os.path.abspath("./model_cache")
+        else:
+            os.environ.pop("OPENVINO_TORCH_MODEL_CACHING", None)
+            os.environ.pop("OPENVINO_TORCH_CACHE_DIR", None)
 
         if override_sampler:
             p.sampler_name = sampler_name
