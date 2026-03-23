@@ -23,6 +23,7 @@ jobs:
       - name: Install test dependencies
         run: |
           pip install "setuptools<81" wheel
+          pip install "clip @ https://github.com/openai/CLIP/archive/d50d76daa670286dd6cacf3bcd80b5e4823fc8e1.zip" --no-build-isolation
           pip install wait-for-it -r requirements-test.txt
         env:
           PIP_DISABLE_PIP_VERSION_CHECK: "1"
