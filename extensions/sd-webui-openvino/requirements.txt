@@ -1,0 +1,4 @@
+openvino==2023.2.0
+diffusers==0.23.0
+huggingface_hub==0.25.2
+# peft is optional here; keep it out of mandatory installs to avoid torch/transformers upgrades
