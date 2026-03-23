@@ -17,13 +17,29 @@ function settingsShowOneTab() {
     gradioApp().querySelector('#settings_show_one_page').click();
 }
 
+function setupDebouncedInput(elem, delay, callback) {
+    let timer = null;
+
+    elem.addEventListener("input", function() {
+        if (timer) {
+            clearTimeout(timer);
+        }
+
+        timer = setTimeout(callback, delay);
+    });
+
+    elem.addEventListener("change", callback);
+}
+
 onUiLoaded(function() {
     var edit = gradioApp().querySelector('#settings_search');
     var editTextarea = gradioApp().querySelector('#settings_search > label > input');
     var buttonShowAllPages = gradioApp().getElementById('settings_show_all_pages');
     var settings_tabs = gradioApp().querySelector('#settings div');
 
-    onEdit('settingsSearch', editTextarea, 250, function() {
+    if (!edit || !editTextarea || !buttonShowAllPages || !settings_tabs) return;
+
+    setupDebouncedInput(editTextarea, 250, function() {
         var searchText = (editTextarea.value || "").trim().toLowerCase();
 
         gradioApp().querySelectorAll('#settings > div[id^=settings_] div[id^=column_settings_] > *').forEach(function(elem) {

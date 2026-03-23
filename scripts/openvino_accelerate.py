@@ -436,7 +436,6 @@ def openvino_compile(gm: GraphModule, *args, model_hash_str: str = None, file_na
     core = Core()
 
     device = get_device()
-    cache_root = cache_root_path()
 
     if (file_name is not None and os.path.isfile(file_name + ".xml") and os.path.isfile(file_name + ".bin")):
         om = core.read_model(file_name + ".xml")
